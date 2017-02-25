@@ -120,6 +120,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Extra Assets\NewtonVR\CollisionSoundFramework\Editor\NVRCollisionSoundControllerEditor.cs" />
+    <Compile Include="Assets\Extra Assets\NewtonVR\Editor\NVRPlayerEditor.cs" />
     <Compile Include="Assets\Extra Assets\SteamVR\Editor\SteamVR_Editor.cs" />
     <Compile Include="Assets\Extra Assets\SteamVR\Editor\SteamVR_RenderModelEditor.cs" />
     <Compile Include="Assets\Extra Assets\SteamVR\Editor\SteamVR_Settings.cs" />
