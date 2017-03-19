@@ -239,7 +239,7 @@
     <Compile Include="Assets\Scripts\Audio\AudioManager.cs" />
     <Compile Include="Assets\Scripts\Audio\PlayList.cs" />
     <Compile Include="Assets\Scripts\Audio\Song.cs" />
-    <Compile Include="Assets\Scripts\Audio\SongNode.cs" />
+    <Compile Include="Assets\Scripts\Audio\SongInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Extra Assets\SteamVR\InteractionSystem\Core\Shaders\SeeThru.shader" />

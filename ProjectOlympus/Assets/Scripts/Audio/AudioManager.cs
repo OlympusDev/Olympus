@@ -20,7 +20,8 @@ public class AudioManager : MonoBehaviour
         PAUSED,
         PLAYING,
         FASTFORWARDING,
-        REWINDING,
+        REWINDING, 
+        LOOPING
         
     }
     MusicPlayerStates currentState;
@@ -75,6 +76,7 @@ public class AudioManager : MonoBehaviour
     public void turnOnMusicPlayer()
     {
         currentState = MusicPlayerStates.PLAYING;
+        songPlayList.current = songPlayList[songPlayList.size - 1];
     }
 
     //Could do same as did for pausing and call it switch MusicPlayerState, but could vary to many things, like looping etc. so better this way as seperate methods
@@ -88,22 +90,28 @@ public class AudioManager : MonoBehaviour
     public void SwitchSongState()
     {
         if (currentState == MusicPlayerStates.PAUSED)
-                musicPlayer.UnPause();
+            musicPlayer.UnPause();
         else
-        { 
-                musicPlayer.Pause();
-                currentState = MusicPlayerStates.PAUSED;
+        {
+            musicPlayer.Pause();
+            currentState = MusicPlayerStates.PAUSED;
         }
     }
 
   
     public void playNextSong()
     {
-        musicPlayer.clip = songPlayList.next();
+        //Since auto plays next when stops, playNextSong just stops current one, BUT does not change state so still playing
+        musicPlayer.Stop();
+        //musicPlayer.clip = songPlayList.next();
     }
 
     public void playPreviousSong()
     {
+        //Goes back twice so then will play next is previous to current
+        if (musicPlayer.time < musicPlayer.clip.length / 4)
+            musicPlayer.clip = songPlayList.prev();
+        //Otherwise restart current song
         musicPlayer.clip = songPlayList.prev();
     }
 
@@ -111,6 +119,12 @@ public class AudioManager : MonoBehaviour
     {
         musicPlayer.clip = songPlayList[i].song;
     }
+
+    public void loop()
+    {
+        currentState = MusicPlayerStates.LOOPING;
+    }
+
     //Was going to do -1 for least and 1 for most, but this wil leave it open for different sorts to do on list
     //If not going to add any can swtich back.
     public void sortPlayList(string priority)
@@ -122,6 +136,9 @@ public class AudioManager : MonoBehaviour
                 break;
             case "most":
                 songPlayList.sortMostPlayed();
+                break;
+            case "random":
+                songPlayList.shuffle();
                 break;
         }
 
@@ -169,10 +186,20 @@ public class AudioManager : MonoBehaviour
             //Means it's finished the song
             if (currentState != MusicPlayerStates.PAUSED && !musicPlayer.isPlaying)
             {
-                playNextSong();
+                if (currentState != MusicPlayerStates.LOOPING)
+                    musicPlayer.clip = songPlayList.next();
                 musicPlayer.Play();
             }
-        }	
-	}
+        }
+
+        //For testing purposes
+        if (Input.GetKeyDown(KeyCode.N))
+            playNextSong();
+        if (Input.GetKeyDown(KeyCode.P))
+            playPreviousSong();
+        if (Input.GetKeyDown(KeyCode.S))
+            sortPlayList("random");
+
+    }
 
 }
