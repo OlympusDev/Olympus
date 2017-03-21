@@ -10,72 +10,91 @@ using UnityEngine;
 /// typeparam name="SongFormat"> This parameter so works for Unity's audioClips, or anyother sound handling Object other libraries may have.</typeparam>
 public class PlayList<SongFormat>
 {
+    //Note to self change all these song/songformat names to something more general.
     List<SongInfo<SongFormat>> playList;
-   
+
     //For going back to original sequence if decide not to have sorted anymore.
     List<SongInfo<SongFormat>> originalSequence;
-    SongInfo<SongFormat> currentSong;
+    int currentIndex;
 
-
+    #region Constructors and Destructor
     public PlayList()
     {
         playList = new List<SongInfo<SongFormat>>();
-       // originalSequence = playList;
-       // currentSong = songs[0]; 
+        currentIndex = 0;
     }
 
 
-    public PlayList(string[] names, SongFormat[] listOfSongs)
+    public PlayList(SongInfo<SongFormat>[] listOfSongs)
     {
         playList = new List<SongInfo<SongFormat>>();
         for (int i = 0; i < listOfSongs.Length; i++)
         {
-           playList.Add(new SongInfo<SongFormat>(names[i],listOfSongs[i],i));
-            //Diff copies not referencing same node, because index of songs can change if sorted, where as elements in original sequence are forever same indicies.
-           // originalSequence.Add(new SongNode<SongFormat>(listOfSongs[i],i));*/
+            playList.Add(listOfSongs[i]);
         }
-        current = playList[0];
-        
-    } 
+
+        //Current because when not accessing any random song, it acts like queue
+        currentIndex = 0;
+
+    }
+
+     ~PlayList()
+    {
+        for (int i = 0; i < size; i++)
+        {
+            SongInfo<SongFormat> songRemoving = playList[i];
+
+            //Restarting playCOunter because it's amount of times played on this playList, not total forever, wait but copying SongInfos also copies playCounter
+            //Meaning is it's absolute playCounter not relative, up to design of playList/ use of it cause if played alot, then maybe people think to add to their own
+            //PlayList? For now it's relative to each one though, since not saving anything anyway it won't really be true amount of times played
+            songRemoving.playCounter = 0;
+        }
+
+    }
+
+    #endregion
     public int size
     {
         get { return playList.Count; }
     }
 
-    #region Editing Contents of play list, so far none of these are being used because getting all sounds at start.
+    #region Editing Contents of PlayList
 
-    public void add(string songName,SongFormat song)
+  
+    public void add(SongInfo<SongFormat> song)
     {
-        //Appending to last so 
-        SongInfo<SongFormat> node = new SongInfo<SongFormat>(songName, song, playList.Count);
-
         if (originalSequence != null)
-            originalSequence.Add(node);
+            originalSequence.Add(song);
 
-        playList.Add(node);
-
-    }
-
-    public void remove(string songName)
-    {
-        //Basically makes it so no two songs in list can have same song name, rather this'll break if they do. I haven't disallowed yet
-        playList.RemoveAt(playList.FindIndex((SongInfo<SongFormat> comparing) => { return comparing.name == songName; }));
+        playList.Add(song);
     }
 
     public void remove(SongInfo<SongFormat> song)
     {
-        playList.RemoveAt(song.placeInList);
+        //Basically makes it so no two songs in list can have same song name, rather this'll break if they do. I haven't disallowed yet
+        playList.Remove(song);
     }
-    #endregion //only add is implemented and not currently used/tested because getting all songs upon constructing.
+
+    /// <summary>
+    /// Removes whatever song is in that place in the list
+    /// </summary>
+    /// <param name="placeInList"></param>
+    public void remove(int placeInList)
+    {
+        //Not saying index so intuitive to playList, and specific place
+        playList.RemoveAt(placeInList);
+    }
+
+    #endregion 
 
     #region Methods for random access of items in playList
-    //Returns node, because will use this to also update the names, if for whatever reason keeps SongNode that inserted here kept 
     public SongInfo<SongFormat> this[SongInfo<SongFormat> i]
     {
         get
         {
-            //currentSong = songs[i.index];
-            return playList[i.placeInList];
+            //Don't think I can make anything more efficient than their built in one, I know current Index but unsorted  so no way to know if better to go to prev or next
+
+            return playList.Find((SongInfo<SongFormat> comparing) => { return i.GetHashCode() == comparing.GetHashCode(); });       
         }
     }
 
@@ -86,10 +105,9 @@ public class PlayList<SongFormat>
             return playList[i];
         }
     }
-
     public SongInfo<SongFormat> find(SongInfo<SongFormat> toFind)
     {
-        return playList.Find((SongInfo<SongFormat> comparing) => { return toFind.name == comparing.name; });
+        return playList.Find((SongInfo<SongFormat> comparing) => { return toFind.song.GetHashCode() == comparing.song.GetHashCode(); });
     }
 
     #endregion
@@ -111,49 +129,55 @@ public class PlayList<SongFormat>
 
     public void shuffle()
     {
-        //Still need to implement, this just testing if saving placeInList method works
-        int cap = Random.Range(playList.Count, playList.Count * Random.Range(1, 5));
-        for (int i = 0; i < playList.Count; i++)
-        {
-            SongInfo<SongFormat> holder = playList[i];
-            //Gets a random number between 0 and some multiple of current size moded by current size
-            int newIndex = Random.Range(i, playList.Count * Random.Range(2, 100)) % playList.Count + i;
-            playList[i] = playList[newIndex];
-            playList[newIndex] = holder;
-        }
+        //Still need to implement
+
     }
 
     #endregion
 
     #region Functions for linearly traversing through playList
-    public SongFormat next()
+    /// <summary>
+    /// This updates current song to next song in playlist.
+    /// prev() calls this method to avoid duplicating code would need to repeat for both
+    /// </summary>
+    /// <returns> The song next to past current, which is new current. </returns>
+    public SongInfo<SongFormat> next()
     {
-        //By updating based on specific node indices, instead of based on index of current list, then this function will work regardless
-        //if songs is min heap, max heap, or original sequence.
-        currentSong = playList[(currentSong.placeInList + 1 != playList.Count) ? currentSong.placeInList + 1 : 0];
-
-        ++currentSong.playCounter;
-        return currentSong.song;
+        
+        currentIndex = (currentIndex == size - 1) ? 0 : currentIndex + 1;
+        SongInfo<SongFormat> currentSong = playList[currentIndex];
+        currentSong.playCounter++;
+        return currentSong;
     }
 
-    public SongFormat prev()
+    public SongInfo<SongFormat> prev()
     {
-
-        //Okay it works, BUT BREAKS if press too fast.    
-        //currentSong = playList[(currentSong.placeInList == 0) ? playList.Count - 2 : currentSong.placeInList - 2];
-        //return next();
-        //Old method DOES not break if press too fast, fuck it I'll look into later, and just diplicate the playCounter, IT WORKS I'M DONE... for now.
-
-        currentSong = playList[(currentSong.placeInList == 0) ? playList.Count - 1 : currentSong.placeInList - 1];
-        ++currentSong.playCounter;
-        return currentSong.song;
+            //And decrease by 2 because going into next to it will end up in current - 1
+            currentIndex = (currentIndex == 0) ? size - 2 : currentIndex - 2;
+            return this.next();
     }
+
+
+    /// <summary>
+    /// Get: Returns the current song to be played.
+    /// Set: Takes new song to play and assigns to be new current.
+    /// </summary>
     public SongInfo<SongFormat> current
     {
-        get { return currentSong; }
-        set { currentSong = playList[value.placeInList]; }
+        get
+        {
+            return playList[currentIndex];
+        }
+        set
+        {
+            int newIndex;
+            //Traverses list to find matching one and assigns current index to index of song being requested to play
+            for (newIndex = currentIndex; playList[newIndex].GetHashCode() != value.GetHashCode(); newIndex = (newIndex != size - 1)? newIndex + 1: 0)
+            {
+                currentIndex = newIndex;
+            }
+        }
     }
-
     #endregion
 }
 

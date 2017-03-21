@@ -17,20 +17,19 @@ public struct SongInfo<SongFormat>
     //Keeps track amount of times this song was played, kept in track incase of wanting to have sort mostplayed/least played functionality
     private int timesPlayed;
 
-    public SongInfo(string name,SongFormat val, int placeInList) 
+    public SongInfo(string name,SongFormat val) 
     {
         this.name = name;
         this.data = val;
-        this.placeInList = placeInList;
-        timesPlayed = 0;
+        timesPlayed = 0;    
     }
 
     public SongInfo(SongInfo<SongFormat> rhs)
     {
         name = rhs.name;
         data = rhs.data;
-        placeInList = rhs.placeInList;
-        timesPlayed = rhs.timesPlayed;
+        timesPlayed = 0;
+    //    timesPlayed = rhs.timesPlayed;
     }
 
     public string name
@@ -38,6 +37,7 @@ public struct SongInfo<SongFormat>
         private set;
         get;
     }
+
     public SongFormat song
     {
         get
@@ -58,15 +58,6 @@ public struct SongInfo<SongFormat>
         {
             timesPlayed = value;
         }
-    }
-
-    //This is to maintain constant time random accesss even after changing original sequence of playList. Each song gameObject will have Song script that keeps a reference to corresponding
-    //SongInfo in playList, so when I sort I update this and therefore update one the gameobject has. So on clicking that song, it passes in it's current placeInList
-    //and doesn't have to iterate through list to find correct matching one.
-    public int placeInList
-    {
-        get;
-        set;
     }
 
     //Defined for sorting based on times played

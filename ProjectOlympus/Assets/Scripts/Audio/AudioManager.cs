@@ -42,32 +42,25 @@ public class AudioManager : MonoBehaviour
         AudioClip[] clips = (Resources.LoadAll<AudioClip>("Sounds\\Music") == null) ? Resources.LoadAll<AudioClip>("Sounds/Music")
             : Resources.LoadAll<AudioClip>("Sounds\\Music");
 
+        songPlayList = new PlayList<AudioClip>();
+
         for (int i = 0; i < clips.Length; i++)
         {
             //Will create as many song objects as there are songs found in folder, I don't want to move Prefabs to Resources cause may cause conflicts, so currently
             //just inside Resources and does work.
             GameObject song = Instantiate(Resources.Load("Song")) as GameObject;
+            songPlayList.add(new SongInfo<AudioClip>(clips[i].name, clips[i]));
+
+            song.GetComponent<ISong<AudioClip>>().songInfo = songPlayList[i];
             song.transform.parent = musicPlayer.transform;
         }
-
-
-        string[] nameOfClips = new string[clips.Length];
-
-        //Names needed so when sort MusicPlayer, names will be in right places in visual list too.
-        for (int i = 0; i < clips.Length; i++)
-        {
-            nameOfClips[i] = clips[i].name;
-        }
-
-        songPlayList = new PlayList<AudioClip>(nameOfClips, clips);
 
         //Sets up visual list of songs to have correct names and songInfo in song Componenets
         reorganizeList();
 
         //There will be a MusicPlayer object that will handle tunring on, but might use this also for bg music so maybe playing at Start afterall.
         //currentState = MusicPlayerStates.PLAYING;
-        currentState = MusicPlayerStates.OFF;
-        turnOnMusicPlayer();
+        turnOffMusicPlayer();
     }
 
     #region MusicPlayer interface
@@ -75,8 +68,9 @@ public class AudioManager : MonoBehaviour
     //Only when player opens musicPlayer, or however we'll handle player starting to play the music
     public void turnOnMusicPlayer()
     {
+
         currentState = MusicPlayerStates.PLAYING;
-        songPlayList.current = songPlayList[songPlayList.size - 1];
+        
     }
 
     //Could do same as did for pausing and call it switch MusicPlayerState, but could vary to many things, like looping etc. so better this way as seperate methods
@@ -110,14 +104,26 @@ public class AudioManager : MonoBehaviour
     {
         //Goes back twice so then will play next is previous to current
         if (musicPlayer.time < musicPlayer.clip.length / 4)
-            musicPlayer.clip = songPlayList.prev();
+            songPlayList.prev();
         //Otherwise restart current song
-        musicPlayer.clip = songPlayList.prev();
+        songPlayList.prev();
     }
 
-    public void playSong(int i)
+    //Actually at this point, there's no point for the playlist, CAUSE PASSING WHAT TO PLAY ANYWAY LOL FUCK THIS IS STUPID, I'M BEING STUPID, THERE MUST BE BETTER WAY THAN THIS
+    //THEN.
+    public void playSong(ISong<AudioClip> songHolder)
     {
-        musicPlayer.clip = songPlayList[i].song;
+        //If song passed in same as current, then just pause/unpause the song
+        if (musicPlayer.clip == songPlayList[songHolder.songInfo].song && musicPlayer.clip.length > 0)
+        {
+            this.SwitchSongState();
+        }
+        else
+            songPlayList.current = songHolder.songInfo;
+
+
+        //So that in update next in list will be the one passed into this method.
+        playPreviousSong();
     }
 
     public void loop()
@@ -160,11 +166,13 @@ public class AudioManager : MonoBehaviour
  
         foreach (GameObject song in list)
         {
-            //Find corresponding song and updates it's place in the backendList to match placeIn GUI. Note: Haven't tested this yet.
+            //Find corresponding song and updates it's place in the backendList to match placeIn GUI.
             //Copies  current songInfo of song to updated songInfo in playList, if it's held by reference than I don't have to keep copying it over and over.
             song.GetComponent<Song>().songInfo = songPlayList.find(song.GetComponent<Song>().songInfo);
         }
     }
+    //This works, tested for adding songs to MusicPlayer, removing, and initial construction. No rearraing algorithms have been implemented so have not been tested for those
+    //but what it's doing is same regardless so theoritically should work.
     private void reorganizeList()
     {
           GameObject[] songsInGuiList = GameObject.FindGameObjectsWithTag("Song");
@@ -181,13 +189,15 @@ public class AudioManager : MonoBehaviour
     // Update is called once per frame
     void Update ()
     {
+        //This needs to be reworked, cause perfectly working and fine for queue in sequence playing but on random playing this breaks caues of the next() part
         if (currentState != MusicPlayerStates.OFF)
         {
             //Means it's finished the song
             if (currentState != MusicPlayerStates.PAUSED && !musicPlayer.isPlaying)
             {
                 if (currentState != MusicPlayerStates.LOOPING)
-                    musicPlayer.clip = songPlayList.next();
+                    musicPlayer.clip = songPlayList.next().song;
+
                 musicPlayer.Play();
             }
         }
@@ -199,7 +209,6 @@ public class AudioManager : MonoBehaviour
             playPreviousSong();
         if (Input.GetKeyDown(KeyCode.S))
             sortPlayList("random");
-
     }
 
 }

@@ -2,29 +2,46 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-/// <summary>
-/// This will keep a reference to SongNode in music PlayList, main purpose of this is to maintain constant time random access  even after
-/// rearranging the playlist by passing in this specific songs new placeInList which was updated here when sorted in AudioManager and PlayList.
-/// </summary>
-public class Song : MonoBehaviour
+
+
+//It needs to have text for song name, remaining length, and times played.
+//It will have children buttons for specifically playing/pausing/stopping, but the object itself is also clickable for playing/pausing
+[RequireComponent (typeof(Button))]
+public class Song : MonoBehaviour, ISong<AudioClip>
 {
-    AudioManager manager;
-    //Each song willl have a buttons childrened under it, play,pause, etc as well as one over everything, this will also have fast forward/playNext/playPrev buttons but for now leaving out
-    //Because design of playList may change to not have this GUI. But these buttons are on every song, for random access, and if see play on a song slot, usually see pause too
-    //Note: I have not gave them these buttons yet.
+
+    #region Everything needed to play the song
+    public AudioManager audioManager;
+    public SongInfo<AudioClip> songInfo { get; set; }
+    #endregion
+
+    #region Specific buttons that are children of this GameObject.
+    public Button stopButton;
     public Button playButton;
-    public Button pauseButton;
-    public SongInfo<AudioClip> songInfo;
+    public Button mute;
+    #endregion
+
+    #region All the UI elements attached to this GameObject
+    private Button self;
+    #endregion
+
+
     // Use this for initialization
-    void Start()
+    void Start ()
     {
-       
-        manager = GameObject.Find("AudioManager").GetComponent<AudioManager>();
-        //Plays song
-        playButton.onClick.AddListener(() => manager.playSong(songInfo.placeInList));
-        //Pauses and Unpauses song. Edit: Spotify has it be same button and just swaps it, but will have it be able to pause and restart, to pause it's own thing and play
-        //will restart song
-        pauseButton.onClick.AddListener(() => manager.SwitchSongState());
+        audioManager = GameObject.Find("AudioManager").GetComponent<AudioManager>();
+        self = GetComponent<Button>();
+        self.onClick.AddListener(() => { audioManager.playSong(this); });
+	}
+	
+
+    public void updateGUISongInfo()
+    {
+        //Probably not needed, depends on how we do the GUI for music player, so I'ma just leave this as is
+     //   guiSongInfo.text = "Name: " + songInfo.name + "Length: " + songInfo.length.ToString() + "Played: " + songInfo.playCounter.ToString(); 
     }
-		
+	// Update is called once per frame
+	void Update ()
+    {
+	}
 }
