@@ -71,8 +71,14 @@ public class PlayList<SongFormat>
 
     public void remove(SongInfo<SongFormat> song)
     {
-        //Basically makes it so no two songs in list can have same song name, rather this'll break if they do. I haven't disallowed yet
+        if (originalSequence != null)
+            originalSequence.Remove(song);
+
         playList.Remove(song);
+
+        //Sets current index to be within new size of list, just incase removed what was currentlyplaying and was at end of list
+        currentIndex %= size;
+
     }
 
     /// <summary>
@@ -81,7 +87,6 @@ public class PlayList<SongFormat>
     /// <param name="placeInList"></param>
     public void remove(int placeInList)
     {
-        //Not saying index so intuitive to playList, and specific place
         playList.RemoveAt(placeInList);
     }
 
@@ -92,8 +97,6 @@ public class PlayList<SongFormat>
     {
         get
         {
-            //Don't think I can make anything more efficient than their built in one, I know current Index but unsorted  so no way to know if better to go to prev or next
-
             return playList.Find((SongInfo<SongFormat> comparing) => { return i.GetHashCode() == comparing.GetHashCode(); });       
         }
     }
@@ -113,7 +116,7 @@ public class PlayList<SongFormat>
     #endregion
 
     #region Changing sequence of play list
-    public void sortMostPlayed()//Constructs max heap based on timesplayed of each songNode and assigns it to songs
+    public void sortMostPlayed()
     {
         //Only need to allocate memroy for originalSequeunce and copy contents if switching sequence
         if (originalSequence == null) originalSequence = new List<SongInfo<SongFormat>>(playList);
@@ -121,7 +124,7 @@ public class PlayList<SongFormat>
         ///Still need to implement
     }
 
-    public void sortLeastPlayed()//Constructs min heap based on timesPlayed of each songNode and assigns it to songs
+    public void sortLeastPlayed()
     {
         if (originalSequence == null) originalSequence = new List<SongInfo<SongFormat>>(playList);
         ///Still need to implement
@@ -171,11 +174,15 @@ public class PlayList<SongFormat>
         set
         {
             int newIndex;
+
             //Traverses list to find matching one and assigns current index to index of song being requested to play
             for (newIndex = currentIndex; playList[newIndex].GetHashCode() != value.GetHashCode(); newIndex = (newIndex != size - 1)? newIndex + 1: 0)
             {
-                currentIndex = newIndex;
+                Debug.Log(playList[newIndex].GetHashCode());
+                Debug.Log(value.GetHashCode());
             }
+            currentIndex = newIndex;
+
         }
     }
     #endregion

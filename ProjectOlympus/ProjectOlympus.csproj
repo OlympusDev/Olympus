@@ -236,12 +236,11 @@
     <Compile Include="Assets\Extra Assets\SteamVR\Scripts\SteamVR_TrackedObject.cs" />
     <Compile Include="Assets\Extra Assets\SteamVR\Scripts\SteamVR_UpdatePoses.cs" />
     <Compile Include="Assets\Extra Assets\SteamVR\Scripts\SteamVR_Utils.cs" />
-    <Compile Include="Assets\Scripts\Audio\AudioManager.cs" />
     <Compile Include="Assets\Scripts\Audio\ISong.cs" />
+    <Compile Include="Assets\Scripts\Audio\MusicPlayer.cs" />
     <Compile Include="Assets\Scripts\Audio\PlayList.cs" />
     <Compile Include="Assets\Scripts\Audio\Song.cs" />
     <Compile Include="Assets\Scripts\Audio\SongInfo.cs" />
-    <Compile Include="Assets\Scripts\HelperScripts\Touchable.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Extra Assets\SteamVR\InteractionSystem\Core\Shaders\SeeThru.shader" />
