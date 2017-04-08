@@ -13,18 +13,44 @@ namespace Olympus.Showroom.UI
         [SerializeField]
         private Button musicButton;
         [SerializeField]
-        private Button AssetsButton;
+        private Button assetsButton;
 
 
         private void Awake()
         {
-
+            InitializeListeners();
         }
 
-        // Update is called once per frame
+        private void OnEnable()
+        {
+            InitializeListeners();
+        }
+
         void Update()
         {
 
+        }
+
+        private void ArtButton()
+        {
+            GameMaster.Instance.gameState = GameMaster.GameState.ArtRoom;
+        }
+
+        private void MusicButton()
+        {
+            GameMaster.Instance.gameState = GameMaster.GameState.MusicRoom;
+        }
+
+        private void AssetsButton()
+        {
+            GameMaster.Instance.gameState = GameMaster.GameState.Armory;
+        }
+
+        private void InitializeListeners()
+        {
+            artButton.onClick.AddListener(() => ArtButton());
+            musicButton.onClick.AddListener(() => MusicButton());
+            assetsButton.onClick.AddListener(() => AssetsButton());
         }
     }
 }
