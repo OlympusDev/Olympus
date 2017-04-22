@@ -33,27 +33,28 @@ public class MusicPlayer : MonoBehaviour
     #region MusicPlayer back end
     void initMusicPlayer()
     {
-        //Assigned in editor so that can put in diff MusicPlayers per scene for whatever reason.
-        // musicPlayer = GameObject.Find("MusicPlayer").GetComponent<AudioSource>();
-        //Incase file paths are different
 
-        AudioClip[] clips = (Resources.LoadAll<AudioClip>("Sounds\\Music") == null) ? Resources.LoadAll<AudioClip>("Sounds/Music")
-            : Resources.LoadAll<AudioClip>("Sounds\\Music");
-
-        songPlayList = new PlayList<AudioClip>();
-
-        for (int i = 0; i < clips.Length; i++)
+        AudioClip[] clips = Resources.LoadAll<AudioClip>("Sounds/Music");
+        if (clips != null)
         {
-            //Will create as many song objects as there are songs found in folder, I don't want to move Prefabs to Resources cause may cause conflicts, so currently
-            //just inside Resources and does work.
-            GameObject song = Instantiate(Resources.Load("Song")) as GameObject;
-            songPlayList.add(new SongInfo<AudioClip>(clips[i].name, clips[i]));
+            songPlayList = new PlayList<AudioClip>();
 
-            song.GetComponent<ISong<AudioClip>>().songInfo = songPlayList[i];
-            song.transform.parent = musicPlayer.transform;
-            song.transform.localPosition = Vector3.forward * 3;
+            for (int i = 0; i < clips.Length; i++)
+            {
+                
+                //Will create as many song objects as there are songs found in folder, I don't want to move Prefabs to Resources cause may cause conflicts, so currently
+                //just inside Resources and does work.
+                GameObject song = Instantiate(Resources.Load("Song")) as GameObject;
+                //Wierd, passing but 
+                songPlayList.add(new SongInfo<AudioClip>(clips[i].name, clips[i]));
+
+                song.GetComponent<ISong<AudioClip>>().songInfo = songPlayList[i];
+                song.transform.parent = musicPlayer.transform;
+                song.transform.localPosition = Vector3.forward * 3;
+            }
+
+            turnOnMusicPlayer();
         }
-        turnOnMusicPlayer();
     }
 
     void processMusicPlayer()
@@ -122,8 +123,15 @@ public class MusicPlayer : MonoBehaviour
 
     public void playSong(ISong<AudioClip> songHolder)
     {
-        songPlayList.current = songHolder.songInfo;
-
+        try
+        {
+            songPlayList.current = songHolder.songInfo;
+        }
+        catch(System.Exception err)
+        {
+            Debug.Log(err.Data.ToString());
+            return;
+        }
         //So that in update next in list will be the one passed into this method.
         songPlayList.prev();
 

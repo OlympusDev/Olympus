@@ -9,7 +9,7 @@ using UnityEngine;
 //becaues it will lock it into Unity. So another class will be called SongInfo, which will have all public fields for me to change what it passes into playList to play
 //correct song. Right now, it will literally have nothing other than placeInlist field, so bit of circular dependancy, it wil depend on AudioManager to correct
 //the placeInList var in each Song GameObject, and then Audio manager depends on Song GameObject to send back previously assigned placeInList to keep random access O(1)
-public struct SongInfo<SongFormat>
+public class SongInfo<SongFormat>
 { 
     //The actual audio data
     SongFormat data;

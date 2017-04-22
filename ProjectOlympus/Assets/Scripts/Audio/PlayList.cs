@@ -173,14 +173,17 @@ public class PlayList<SongFormat>
         }
         set
         {
-            int newIndex;
-
-            //Traverses list to find matching one and assigns current index to index of song being requested to play
-            for (newIndex = currentIndex; playList[newIndex].GetHashCode() != value.GetHashCode(); newIndex = (newIndex != size - 1)? newIndex + 1: 0)
+            int newIndex = (currentIndex + 1 == playList.Count) ? 0 : currentIndex + 1;
+            
+            //Traverses list to find matching one and assigns current index to index of song being requested to play, this goes circularly through playlist
+            //so has chance to be infinite, need to keep track of traversals or if back to currentIndex, then that means not found
+            for (; playList[newIndex].GetHashCode() != value.GetHashCode(); newIndex = (newIndex != size - 1)? newIndex + 1: 0)
             {
-                Debug.Log(playList[newIndex].GetHashCode());
-                Debug.Log(value.GetHashCode());
+                //Actually instead of throwing, maybe just maintain current state?
+                if (newIndex == currentIndex) throw (new System.Exception("That song does not exist in the playlist."));
             }
+            
+            //Current index is chosen song wanted to play.
             currentIndex = newIndex;
 
         }

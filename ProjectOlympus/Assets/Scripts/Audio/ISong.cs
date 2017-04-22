@@ -5,5 +5,5 @@
 public interface ISong<SongFormat>
 {  
      SongInfo<SongFormat> songInfo { get; set; }		
-
+       
 }
