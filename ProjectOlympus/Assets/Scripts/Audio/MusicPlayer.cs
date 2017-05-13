@@ -10,6 +10,9 @@ using UnityEngine;
 public class MusicPlayer : MonoBehaviour
 {
     #region Fields relating to music Player/ Playing background music.
+    //All songs in our resources
+    AudioClip[] allSongs;
+    //Songs queued up to play
     PlayList<AudioClip> songPlayList;
     public AudioSource musicPlayer;
     enum MusicPlayerStates : byte
@@ -34,27 +37,24 @@ public class MusicPlayer : MonoBehaviour
     void initMusicPlayer()
     {
 
-        AudioClip[] clips = Resources.LoadAll<AudioClip>("Sounds/Music");
-        if (clips != null)
+        //There will be objects in scene with text, when they interact with those and music player then will play
+        //Gets all the audio clips in resources
+        allSongs = Resources.LoadAll<AudioClip>("Sounds/Music");
+        if (allSongs == null)
         {
-            songPlayList = new PlayList<AudioClip>();
-
+            throw new System.Exception("Unable to get any audio clips or failed to find directory");
+         
+            /* The player can add the songs them selves
+            //Adds them into playlist
             for (int i = 0; i < clips.Length; i++)
             {
-                
-                //Will create as many song objects as there are songs found in folder, I don't want to move Prefabs to Resources cause may cause conflicts, so currently
-                //just inside Resources and does work.
-                GameObject song = Instantiate(Resources.Load("Song")) as GameObject;
-                //Wierd, passing but 
+               
                 songPlayList.add(new SongInfo<AudioClip>(clips[i].name, clips[i]));
-
-                song.GetComponent<ISong<AudioClip>>().songInfo = songPlayList[i];
-                song.transform.parent = musicPlayer.transform;
-                song.transform.localPosition = Vector3.forward * 3;
             }
-
-            turnOnMusicPlayer();
+            */
+            //turnOnMusicPlayer();
         }
+        songPlayList = new PlayList<AudioClip>();
     }
 
     void processMusicPlayer()
@@ -85,6 +85,7 @@ public class MusicPlayer : MonoBehaviour
     public void turnOffMusicPlayer()
     {
         currentState = MusicPlayerStates.OFF;
+        musicPlayer.Stop();
     }
 
     //Thought about keeping as Pause and Unpause but it's basically a switch on and off so not worth 2 seperate methods 
@@ -121,11 +122,18 @@ public class MusicPlayer : MonoBehaviour
         playNextSong();
     }
 
-    public void playSong(ISong<AudioClip> songHolder)
+    #region To be called by some GUI to play specific songs
+    public void playSong(string song)
     {
         try
         {
-            songPlayList.current = songHolder.songInfo;
+            /* //If not in playlist then this thrown to catch below
+             removeSong(song);
+             //If not thrown need to re add the song, actually but then this fucks the placement so no good
+             enqueueSong(song);*/
+            var songData = songPlayList.find(song);
+            if (songData == null) throw new System.ArgumentException("That song is not in our data");
+            songPlayList.current = songPlayList.find(song);
         }
         catch(System.Exception err)
         {
@@ -139,18 +147,25 @@ public class MusicPlayer : MonoBehaviour
 
     }
 
-    public void dequeueSong(ISong<AudioClip> songHolder)
+    public void removeSong(string song)
     {
-        playNextSong();
-
-        songPlayList.remove(songHolder.songInfo);
+        var songData = songPlayList.find(song);
+        if (songData == null) throw new System.ArgumentException("That song is not in our data");
+            songPlayList.remove(songData);
     }
 
-    public void enqueueSong(ISong<AudioClip> songHolder)
+    public void enqueueSong(string song)
     {
-        songPlayList.add(songHolder.songInfo);
+        SongInfo<AudioClip> toAdd;
+        foreach (AudioClip clip in allSongs)
+            if (clip.name == song)
+            {
+                toAdd = new SongInfo<AudioClip>(clip.name,clip);
+                break;
+            }
     }
 
+    #endregion
     public void loop()
     {
         if (currentState != MusicPlayerStates.LOOPING)
@@ -159,23 +174,19 @@ public class MusicPlayer : MonoBehaviour
             currentState = MusicPlayerStates.PLAYING;
     }
 
-
+    public string[] viewAllSongs()
+    {
+        string[] songNames = new string[allSongs.Length];
+        for (int i = 0; i < allSongs.Length; i++)
+        {
+            songNames[i] = allSongs[i].name;
+        }
+        return songNames;
+    }
     //Not Used.
     public void sortPlayList(string priority)
     {
-        switch (priority)
-        {
-            case "least":
-                songPlayList.sortLeastPlayed();
-                break;
-            case "most":
-                songPlayList.sortMostPlayed();
-                break;
-            case "random":
-                songPlayList.shuffle();
-                break;
-        }
-
+        //ToDo.
     }
     #endregion
 
@@ -187,3 +198,4 @@ public class MusicPlayer : MonoBehaviour
     }
 
 }
+

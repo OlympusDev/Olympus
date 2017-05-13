@@ -113,6 +113,10 @@ public class PlayList<SongFormat>
         return playList.Find((SongInfo<SongFormat> comparing) => { return toFind.song.GetHashCode() == comparing.song.GetHashCode(); });
     }
 
+    public SongInfo<SongFormat> find(string toFind)
+    {
+        return playList.Find((SongInfo<SongFormat> comparing) => { return toFind == comparing.name; });
+    }
     #endregion
 
     #region Changing sequence of play list
